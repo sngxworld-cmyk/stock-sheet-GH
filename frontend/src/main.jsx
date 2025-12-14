@@ -68,6 +68,10 @@ function App() {
     }]);
   };
 
+  const deleteRow = (i) => {
+    setRows(rows.filter((_, index) => index !== i));
+  };
+
   return (
     <div style={{ padding: 20 }}>
       <h2>Guest House Stock Sheet</h2>
@@ -85,6 +89,7 @@ function App() {
             <th colSpan="2">Out</th>
             <th rowSpan="2">Closing</th>
             <th rowSpan="2">Remarks</th>
+            <th rowSpan="2">Action</th>
           </tr>
           <tr>
             <th>Date</th><th>Qty</th>
@@ -99,26 +104,51 @@ function App() {
           {rows.map((r, i) => (
             <tr key={i}>
               <td>{i + 1}</td>
-              <td><input value={r.item} onChange={e => update(i,"item",e.target.value)} /></td>
+
+              <td>
+                <input value={r.item}
+                  onChange={e => update(i,"item",e.target.value)} />
+              </td>
+
               <td>{r.unit}</td>
 
-              <td><input type="date" value={r.openDate} onChange={e => update(i,"openDate",e.target.value)} /></td>
-              <td><input type="number" value={r.openQty} onChange={e => update(i,"openQty",e.target.value)} /></td>
+              <td><input type="date" value={r.openDate}
+                onChange={e => update(i,"openDate",e.target.value)} /></td>
+              <td><input type="number" value={r.openQty}
+                onChange={e => update(i,"openQty",e.target.value)} /></td>
 
-              <td><input type="date" value={r.inDate1} onChange={e => update(i,"inDate1",e.target.value)} /></td>
-              <td><input type="number" value={r.inQty1} onChange={e => update(i,"inQty1",e.target.value)} /></td>
+              <td><input type="date" value={r.inDate1}
+                onChange={e => update(i,"inDate1",e.target.value)} /></td>
+              <td><input type="number" value={r.inQty1}
+                onChange={e => update(i,"inQty1",e.target.value)} /></td>
 
-              <td><input type="date" value={r.outDate1} onChange={e => update(i,"outDate1",e.target.value)} /></td>
-              <td><input type="number" value={r.outQty1} onChange={e => update(i,"outQty1",e.target.value)} /></td>
+              <td><input type="date" value={r.outDate1}
+                onChange={e => update(i,"outDate1",e.target.value)} /></td>
+              <td><input type="number" value={r.outQty1}
+                onChange={e => update(i,"outQty1",e.target.value)} /></td>
 
-              <td><input type="date" value={r.inDate2} onChange={e => update(i,"inDate2",e.target.value)} /></td>
-              <td><input type="number" value={r.inQty2} onChange={e => update(i,"inQty2",e.target.value)} /></td>
+              <td><input type="date" value={r.inDate2}
+                onChange={e => update(i,"inDate2",e.target.value)} /></td>
+              <td><input type="number" value={r.inQty2}
+                onChange={e => update(i,"inQty2",e.target.value)} /></td>
 
-              <td><input type="date" value={r.outDate2} onChange={e => update(i,"outDate2",e.target.value)} /></td>
-              <td><input type="number" value={r.outQty2} onChange={e => update(i,"outQty2",e.target.value)} /></td>
+              <td><input type="date" value={r.outDate2}
+                onChange={e => update(i,"outDate2",e.target.value)} /></td>
+              <td><input type="number" value={r.outQty2}
+                onChange={e => update(i,"outQty2",e.target.value)} /></td>
 
-              <td>{r.close}</td>
-              <td><input value={r.remarks} onChange={e => update(i,"remarks",e.target.value)} /></td>
+              <td style={{ background: "#d4f7d4", fontWeight: "bold", textAlign: "center" }}>
+                {r.close}
+              </td>
+
+              <td>
+                <input value={r.remarks}
+                  onChange={e => update(i,"remarks",e.target.value)} />
+              </td>
+
+              <td>
+                <button onClick={() => deleteRow(i)}>❌</button>
+              </td>
             </tr>
           ))}
         </tbody>
@@ -131,5 +161,6 @@ function App() {
 }
 
 ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+
 
 
