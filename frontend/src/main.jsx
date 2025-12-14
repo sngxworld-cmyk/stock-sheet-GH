@@ -2,23 +2,48 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import { useState, useEffect } from "react";
 
-function getUnit(item) {
-  const countable = ["soap", "bed", "chair", "packet", "bottle"];
-  const weight = ["rice", "sugar", "flour"];
-  const liquid = ["oil", "milk", "water"];
+/* ---------- ITEM LOGIC ---------- */
+const COUNTABLE = ["soap", "bed", "chair", "packet", "bottle", "plate"];
+const WEIGHT = ["rice", "sugar", "flour", "dal"];
+const LIQUID = ["oil", "milk", "water"];
 
+function getItemType(item) {
   const name = item.toLowerCase();
-
-  if (countable.some(x => name.includes(x))) return "Nos";
-  if (liquid.some(x => name.includes(x))) return "L";
-  if (weight.some(x => name.includes(x))) return "Kg";
+  if (COUNTABLE.some(x => name.includes(x))) return "count";
+  if (LIQUID.some(x => name.includes(x))) return "liquid";
+  if (WEIGHT.some(x => name.includes(x))) return "weight";
   return "";
 }
 
+function formatQty(qty, type) {
+  if (!qty) return "";
+
+  if (type === "count") return qty;
+
+  if (type === "weight") {
+    return qty >= 1000 ? (qty / 1000) + " kg" : qty + " g";
+  }
+
+  if (type === "liquid") {
+    return qty >= 1000 ? (qty / 1000) + " L" : qty + " ml";
+  }
+
+  return qty;
+}
+
+function getUnit(type) {
+  if (type === "count") return "Nos";
+  if (type === "weight") return "g / kg";
+  if (type === "liquid") return "ml / L";
+  return "";
+}
+
+/* ---------- APP ---------- */
 function App() {
   const [rows, setRows] = useState([
     {
       item: "",
+      type: "",
       unit: "",
       openDate: "",
       openQty: "",
@@ -37,6 +62,8 @@ function App() {
 
   useEffect(() => {
     const updated = rows.map(r => {
+      const type = getItemType(r.item);
+
       const open = Number(r.openQty) || 0;
       const in1 = Number(r.inQty1) || 0;
       const in2 = Number(r.inQty2) || 0;
@@ -45,7 +72,8 @@ function App() {
 
       return {
         ...r,
-        unit: getUnit(r.item),
+        type,
+        unit: getUnit(type),
         close: open + in1 + in2 - out1 - out2 || ""
       };
     });
@@ -61,9 +89,12 @@ function App() {
 
   const addRow = () => {
     setRows([...rows, {
-      item: "", unit: "", openDate: "", openQty: "",
-      inDate1: "", inQty1: "", outDate1: "", outQty1: "",
-      inDate2: "", inQty2: "", outDate2: "", outQty2: "",
+      item: "", type: "", unit: "",
+      openDate: "", openQty: "",
+      inDate1: "", inQty1: "",
+      outDate1: "", outQty1: "",
+      inDate2: "", inQty2: "",
+      outDate2: "", outQty2: "",
       close: "", remarks: ""
     }]);
   };
@@ -138,7 +169,7 @@ function App() {
                 onChange={e => update(i,"outQty2",e.target.value)} /></td>
 
               <td style={{ background: "#d4f7d4", fontWeight: "bold", textAlign: "center" }}>
-                {r.close}
+                {formatQty(r.close, r.type)}
               </td>
 
               <td>
@@ -161,6 +192,7 @@ function App() {
 }
 
 ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+
 
 
 
