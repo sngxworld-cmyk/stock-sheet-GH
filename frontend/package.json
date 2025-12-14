@@ -1,0 +1,9 @@
+{
+  "name": "guest-house-stock-sheet-frontend",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "start": "vite",
+    "build": "vite build"
+  }
+}
