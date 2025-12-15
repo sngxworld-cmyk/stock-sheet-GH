@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import ReactDOM from "react-dom/client";
 
 const STORAGE_KEY = "guest_house_stock_data";
+const PIN_CODE = "GH1982";
 
 const weightItems = ["rice", "sugar", "flour", "dhal"];
 const liquidItems = ["milk", "water", "oil", "juice"];
@@ -13,15 +14,15 @@ function normalizeUnit(qtyText, item) {
   if (isNaN(num)) return { qty: "", unit: "" };
 
   if (text.includes("kg")) return { qty: num, unit: "kg" };
-  if (text.includes("g")) return { qty: num / 1000, unit: "kg" };
-  if (text.includes("ml")) return { qty: num / 1000, unit: "L" };
+  if (text.includes("g")) return { qty: num, unit: "g" };
   if (text.includes("l")) return { qty: num, unit: "L" };
+  if (text.includes("ml")) return { qty: num, unit: "ml" };
 
   if (weightItems.some(w => item.includes(w)))
-    return { qty: num, unit: "kg" };
+    return num >= 1000 ? { qty: num / 1000, unit: "kg" } : { qty: num, unit: "g" };
 
   if (liquidItems.some(l => item.includes(l)))
-    return { qty: num, unit: "L" };
+    return num >= 1000 ? { qty: num / 1000, unit: "L" } : { qty: num, unit: "ml" };
 
   return { qty: num, unit: "count" };
 }
@@ -46,7 +47,8 @@ function App() {
   });
 
   const [command, setCommand] = useState("");
-  const [page, setPage] = useState("app");
+  const [page, setPage] = useState("lock");
+  const [pin, setPin] = useState("");
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(rows));
@@ -57,23 +59,9 @@ function App() {
     const i = parseFloat(r.inQty) || 0;
     const o1 = parseFloat(r.outQty1) || 0;
     const o2 = parseFloat(r.outQty2) || 0;
+    if (!o && !i && !o1 && !o2) return "";
     return o + i - o1 - o2;
   };
-
-  /* 🔢 TOTALS */
-  const totals = rows.reduce(
-    (acc, r) => {
-      const bal = balanceQty(r);
-      if (!bal) return acc;
-
-      if (r.unit === "count") acc.count += bal;
-      if (r.unit === "kg") acc.kg += bal;
-      if (r.unit === "L") acc.l += bal;
-
-      return acc;
-    },
-    { count: 0, kg: 0, l: 0 }
-  );
 
   const updateQty = (i, key, val) => {
     const copy = [...rows];
@@ -141,73 +129,126 @@ function App() {
   };
 
   return (
-    <div style={{ minHeight: "100vh", background: "#f5f6fa" }}>
+    <div style={{ minHeight: "100vh", fontFamily: "Inter, Arial", background: "#f5f6fa" }}>
 
+      {/* 🔒 PIN LOCK PAGE */}
+      {page === "lock" && (
+        <div style={{
+          minHeight: "100vh",
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          background: "linear-gradient(135deg,#4facfe,#6a11cb)"
+        }}>
+          <div style={{
+            background: "white",
+            padding: 40,
+            borderRadius: 18,
+            width: 360,
+            textAlign: "center"
+          }}>
+            <div style={{
+              width: 80,
+              height: 80,
+              borderRadius: 18,
+              background: "#6a11cb",
+              color: "white",
+              fontSize: 36,
+              fontWeight: "bold",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              margin: "0 auto 20px"
+            }}>
+              GH
+            </div>
+
+            <h2>Guest House Stock</h2>
+            <input
+              type="password"
+              placeholder="Enter PIN"
+              value={pin}
+              onChange={e => setPin(e.target.value)}
+              style={{ width: "100%", padding: 12, marginTop: 10 }}
+            />
+            <button
+              onClick={() => pin === PIN_CODE ? setPage("app") : alert("Wrong PIN")}
+              style={{
+                marginTop: 20,
+                width: "100%",
+                padding: 12,
+                background: "#6a11cb",
+                color: "white",
+                border: "none",
+                borderRadius: 10
+              }}
+            >
+              Unlock →
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* 📊 MAIN APP */}
       {page === "app" && (
         <div style={{ padding: 20 }}>
+          <h2>Guest House Stock Sheet</h2>
 
-          {/* 🔢 TOTAL DASHBOARD */}
-          <div style={{
-            display: "flex",
-            gap: 20,
-            marginBottom: 20
-          }}>
-            <div style={card}>
-              <h4>Total Countables</h4>
-              <strong>{totals.count}</strong>
-            </div>
-
-            <div style={card}>
-              <h4>Total Kg</h4>
-              <strong>{totals.kg.toFixed(2)} kg</strong>
-            </div>
-
-            <div style={card}>
-              <h4>Total Litres</h4>
-              <strong>{totals.l.toFixed(2)} L</strong>
-            </div>
-          </div>
-
-          {/* AI */}
           <input
-            style={{ width: "60%" }}
+            style={{ width: "60%", padding: 10 }}
             placeholder="AI: add 2kg sugar 2025/01/01 opening"
             value={command}
             onChange={e => setCommand(e.target.value)}
           />
-          <button onClick={runAI}>🤖 Run</button>
-          <button onClick={addRow}>➕ Row</button>
+          <button onClick={runAI} style={{ marginLeft: 10 }}>🤖 Run</button>
+          <button onClick={addRow} style={{ marginLeft: 10 }}>➕ Row</button>
 
-          {/* TABLE */}
-          <table width="100%" cellPadding="6" style={{ marginTop: 15 }}>
+          <table style={{ width: "100%", marginTop: 15, borderCollapse: "collapse" }}>
             <thead>
-              <tr>
-                <th>#</th><th>Item</th><th>Unit</th>
-                <th>Open Date</th><th>Open Qty</th>
-                <th>Out Date</th><th>Out Qty</th>
-                <th>In Date</th><th>In Qty</th>
-                <th>Out Date</th><th>Out Qty</th>
-                <th>Balance</th><th>❌</th>
+              <tr style={{ background: "#f1f3f6" }}>
+                {["S.No","Item","Unit","Open Date","Open Qty","Out Date","Out Qty","In Date","In Qty","Out Date","Out Qty","Balance","❌"]
+                  .map(h => (
+                    <th key={h} style={{ border: "1px solid #999", padding: 8 }}>{h}</th>
+                  ))}
               </tr>
             </thead>
+
             <tbody>
               {rows.map((r, i) => (
                 <tr key={i}>
-                  <td>{i + 1}</td>
-                  <td><input value={r.item} onChange={e => {
-                    const c = [...rows]; c[i].item = e.target.value; setRows(c);
-                  }} /></td>
-                  <td><b>{r.unit}</b></td>
-                  <td><input type="date" value={r.openDate} /></td>
-                  <td><input onChange={e => updateQty(i, "openQty", e.target.value)} /></td>
-                  <td><input type="date" /></td>
-                  <td><input onChange={e => updateQty(i, "outQty1", e.target.value)} /></td>
-                  <td><input type="date" /></td>
-                  <td><input onChange={e => updateQty(i, "inQty", e.target.value)} /></td>
-                  <td><input type="date" /></td>
-                  <td><input onChange={e => updateQty(i, "outQty2", e.target.value)} /></td>
-                  <td><b>{balanceQty(r)}</b></td>
-                  <td><button onClick={() => deleteRow(i)}>🗑️</button></td>
+                  <td style={{ border: "1px solid #ccc", textAlign: "center" }}>{i + 1}</td>
+                  <td style={{ border: "1px solid #ccc" }}>
+                    <input value={r.item} onChange={e => {
+                      const c = [...rows]; c[i].item = e.target.value; setRows(c);
+                    }} />
+                  </td>
+                  <td style={{ border: "1px solid #ccc", fontWeight: "bold" }}>{r.unit}</td>
+
+                  {["openDate","openQty","outDate1","outQty1","inDate","inQty","outDate2","outQty2"].map((k, idx) => (
+                    <td key={k} style={{ border: "1px solid #ccc" }}>
+                      <input
+                        type={k.includes("Date") ? "date" : "text"}
+                        value={r[k]}
+                        onChange={e =>
+                          k.includes("Qty")
+                            ? updateQty(i, k, e.target.value)
+                            : (() => {
+                                const c = [...rows];
+                                c[i][k] = e.target.value;
+                                setRows(c);
+                              })()
+                        }
+                      />
+                    </td>
+                  ))}
+
+                  <td style={{ border: "1px solid #999", background: "#ffeaa7", fontWeight: "bold" }}>
+                    {balanceQty(r)}
+                  </td>
+
+                  <td style={{ border: "1px solid #ccc", textAlign: "center" }}>
+                    <button onClick={() => deleteRow(i)}>🗑️</button>
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -218,13 +259,5 @@ function App() {
   );
 }
 
-const card = {
-  background: "white",
-  padding: 16,
-  borderRadius: 12,
-  boxShadow: "0 6px 16px rgba(0,0,0,0.1)",
-  minWidth: 160,
-  textAlign: "center"
-};
-
 ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+
