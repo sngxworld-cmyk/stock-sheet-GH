@@ -46,6 +46,7 @@ function App() {
   });
 
   const [command, setCommand] = useState("");
+  const [page, setPage] = useState("home");
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(rows));
@@ -125,87 +126,147 @@ function App() {
   };
 
   return (
-    <div style={{ fontFamily: "Arial", padding: 20 }}>
-      <h2>Guest House Stock Sheet</h2>
+    <div style={{ fontFamily: "Arial", minHeight: "100vh" }}>
+      {/* 🔹 HOME PAGE */}
+      {page === "home" && (
+        <div
+          style={{
+            height: "100vh",
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "center",
+            alignItems: "center",
+            background: "linear-gradient(135deg, #0984e3, #6c5ce7)",
+            color: "white",
+            textAlign: "center"
+          }}
+        >
+          <div
+            style={{
+              width: 90,
+              height: 90,
+              borderRadius: 20,
+              background: "white",
+              color: "#6c5ce7",
+              fontSize: 40,
+              fontWeight: "bold",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              marginBottom: 20
+            }}
+          >
+            GH
+          </div>
 
-      <input
-        style={{ width: "60%" }}
-        placeholder="AI: add 2kg sugar 2025/01/01 opening"
-        value={command}
-        onChange={e => setCommand(e.target.value)}
-      />
-      <button onClick={runAI} style={{ marginLeft: 10 }}>🤖 Run</button>
-      <button onClick={addRow} style={{ marginLeft: 10 }}>➕ Add Row</button>
+          <h1>Guest House Stock Sheet</h1>
+          <p style={{ maxWidth: 420 }}>
+            Smart inventory management with AI-powered stock entry and automatic balance calculation.
+          </p>
 
-      <table border="1" cellPadding="6" width="100%" style={{ marginTop: 15 }}>
-        <thead>
-          <tr style={{ background: "#eee" }}>
-            <th>S.No</th>
-            <th>Item</th>
-            <th>Unit</th>
-            <th>Opening Date</th>
-            <th>Opening Qty</th>
-            <th>Out Date</th>
-            <th>Out Qty</th>
-            <th>In Date</th>
-            <th>In Qty</th>
-            <th>Out Date</th>
-            <th>Out Qty</th>
-            <th>Balance</th>
-            <th>Delete</th>
-          </tr>
-        </thead>
+          <button
+            onClick={() => setPage("app")}
+            style={{
+              marginTop: 30,
+              padding: "12px 30px",
+              fontSize: 16,
+              borderRadius: 8,
+              border: "none",
+              cursor: "pointer",
+              background: "white",
+              color: "#6c5ce7",
+              fontWeight: "bold"
+            }}
+          >
+            Enter Stock Sheet →
+          </button>
+        </div>
+      )}
 
-        <tbody>
-          {rows.map((r, i) => (
-            <tr key={i}>
-              <td>{i + 1}</td>
-              <td><input value={r.item} onChange={e => {
-                const c = [...rows]; c[i].item = e.target.value; setRows(c);
-              }} /></td>
-              <td style={{ background: "#f0f0f0", fontWeight: "bold" }}>{r.unit}</td>
+      {/* 🔹 MAIN APP */}
+      {page === "app" && (
+        <div style={{ padding: 20 }}>
+          <button onClick={() => setPage("home")} style={{ marginBottom: 10 }}>
+            ← Home
+          </button>
 
-              <td><input type="date" value={r.openDate} onChange={e => {
-                const c = [...rows]; c[i].openDate = e.target.value; setRows(c);
-              }} /></td>
-              <td><input onChange={e => updateQty(i, "openQty", e.target.value)} /></td>
+          <h2>Guest House Stock Sheet</h2>
 
-              <td><input type="date" value={r.outDate1} onChange={e => {
-                const c = [...rows]; c[i].outDate1 = e.target.value; setRows(c);
-              }} /></td>
-              <td><input onChange={e => updateQty(i, "outQty1", e.target.value)} /></td>
+          <input
+            style={{ width: "60%" }}
+            placeholder="AI: add 2kg sugar 2025/01/01 opening"
+            value={command}
+            onChange={e => setCommand(e.target.value)}
+          />
+          <button onClick={runAI} style={{ marginLeft: 10 }}>🤖 Run</button>
+          <button onClick={addRow} style={{ marginLeft: 10 }}>➕ Add Row</button>
 
-              <td><input type="date" value={r.inDate} onChange={e => {
-                const c = [...rows]; c[i].inDate = e.target.value; setRows(c);
-              }} /></td>
-              <td><input onChange={e => updateQty(i, "inQty", e.target.value)} /></td>
+          <table border="1" cellPadding="6" width="100%" style={{ marginTop: 15 }}>
+            <thead>
+              <tr style={{ background: "#eee" }}>
+                <th>S.No</th>
+                <th>Item</th>
+                <th>Unit</th>
+                <th>Opening Date</th>
+                <th>Opening Qty</th>
+                <th>Out Date</th>
+                <th>Out Qty</th>
+                <th>In Date</th>
+                <th>In Qty</th>
+                <th>Out Date</th>
+                <th>Out Qty</th>
+                <th>Balance</th>
+                <th>Delete</th>
+              </tr>
+            </thead>
 
-              <td><input type="date" value={r.outDate2} onChange={e => {
-                const c = [...rows]; c[i].outDate2 = e.target.value; setRows(c);
-              }} /></td>
-              <td><input onChange={e => updateQty(i, "outQty2", e.target.value)} /></td>
+            <tbody>
+              {rows.map((r, i) => (
+                <tr key={i}>
+                  <td>{i + 1}</td>
+                  <td><input value={r.item} onChange={e => {
+                    const c = [...rows]; c[i].item = e.target.value; setRows(c);
+                  }} /></td>
+                  <td style={{ background: "#f0f0f0", fontWeight: "bold" }}>{r.unit}</td>
 
-              <td style={{ background: "#ffeaa7", fontWeight: "bold" }}>
-                {balanceQty(r)}
-              </td>
+                  <td><input type="date" value={r.openDate} onChange={e => {
+                    const c = [...rows]; c[i].openDate = e.target.value; setRows(c);
+                  }} /></td>
+                  <td><input onChange={e => updateQty(i, "openQty", e.target.value)} /></td>
 
-              <td>
-                <button onClick={() => deleteRow(i)} disabled={rows.length === 1}>🗑️</button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+                  <td><input type="date" value={r.outDate1} onChange={e => {
+                    const c = [...rows]; c[i].outDate1 = e.target.value; setRows(c);
+                  }} /></td>
+                  <td><input onChange={e => updateQty(i, "outQty1", e.target.value)} /></td>
+
+                  <td><input type="date" value={r.inDate} onChange={e => {
+                    const c = [...rows]; c[i].inDate = e.target.value; setRows(c);
+                  }} /></td>
+                  <td><input onChange={e => updateQty(i, "inQty", e.target.value)} /></td>
+
+                  <td><input type="date" value={r.outDate2} onChange={e => {
+                    const c = [...rows]; c[i].outDate2 = e.target.value; setRows(c);
+                  }} /></td>
+                  <td><input onChange={e => updateQty(i, "outQty2", e.target.value)} /></td>
+
+                  <td style={{ background: "#ffeaa7", fontWeight: "bold" }}>
+                    {balanceQty(r)}
+                  </td>
+
+                  <td>
+                    <button onClick={() => deleteRow(i)} disabled={rows.length === 1}>🗑️</button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 }
 
 ReactDOM.createRoot(document.getElementById("root")).render(<App />);
-
-
-
-
-
 
 
 
