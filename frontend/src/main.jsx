@@ -160,6 +160,52 @@ function App() {
   const deleteRow = (i) => {
     setRows(rows.filter((_, index) => index !== i));
   };
+  const exportExcel = () => {
+  const data = rows.map((r, i) => ({
+    "S.No": i + 1,
+    "Item": r.item,
+    "Unit": r.unit,
+    "Opening Qty": formatQty(r.openQty, r.type),
+    "In Qty": formatQty(r.inQty1, r.type),
+    "Out Qty": formatQty(r.outQty1, r.type),
+    "Closing": formatQty(r.close, r.type),
+    "Remarks": r.remarks
+  }));
+
+  const ws = XLSX.utils.json_to_sheet(data);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Stock Sheet");
+  XLSX.writeFile(wb, "Guest_House_Stock.xlsx");
+};
+
+const exportPDF = () => {
+  const doc = new jsPDF();
+
+  const tableData = rows.map((r, i) => ([
+    i + 1,
+    r.item,
+    r.unit,
+    formatQty(r.openQty, r.type),
+    formatQty(r.inQty1, r.type),
+    formatQty(r.outQty1, r.type),
+    formatQty(r.close, r.type),
+    r.remarks
+  ]));
+
+  doc.text("Guest House Stock Sheet", 14, 15);
+
+  doc.autoTable({
+    startY: 20,
+    head: [[
+      "S.No", "Item", "Unit",
+      "Opening", "In", "Out",
+      "Closing", "Remarks"
+    ]],
+    body: tableData
+  });
+
+  doc.save("Guest_House_Stock.pdf");
+};
 
   return (
     <div style={{ padding: 20 }}>
