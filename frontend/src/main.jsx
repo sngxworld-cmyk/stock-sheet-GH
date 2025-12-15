@@ -12,16 +12,16 @@ function normalizeUnit(qtyText, item) {
   const num = parseFloat(text);
   if (isNaN(num)) return { qty: "", unit: "" };
 
-  if (text.includes("kg")) return { qty: num, unit: "packet" };
-  if (text.includes("g")) return { qty: num, unit: "g" };
-  if (text.includes("ml")) return { qty: num, unit: "ml" };
+  if (text.includes("kg")) return { qty: num, unit: "kg" };
+  if (text.includes("g")) return { qty: num / 1000, unit: "kg" };
+  if (text.includes("ml")) return { qty: num / 1000, unit: "L" };
   if (text.includes("l")) return { qty: num, unit: "L" };
 
   if (weightItems.some(w => item.includes(w)))
-    return num >= 1000 ? { qty: num / 1000, unit: "kg" } : { qty: num, unit: "g" };
+    return { qty: num, unit: "kg" };
 
   if (liquidItems.some(l => item.includes(l)))
-    return num >= 1000 ? { qty: num / 1000, unit: "L" } : { qty: num, unit: "ml" };
+    return { qty: num, unit: "L" };
 
   return { qty: num, unit: "count" };
 }
@@ -57,9 +57,23 @@ function App() {
     const i = parseFloat(r.inQty) || 0;
     const o1 = parseFloat(r.outQty1) || 0;
     const o2 = parseFloat(r.outQty2) || 0;
-    if (!o && !i && !o1 && !o2) return "";
     return o + i - o1 - o2;
   };
+
+  /* 🔢 TOTALS */
+  const totals = rows.reduce(
+    (acc, r) => {
+      const bal = balanceQty(r);
+      if (!bal) return acc;
+
+      if (r.unit === "count") acc.count += bal;
+      if (r.unit === "kg") acc.kg += bal;
+      if (r.unit === "L") acc.l += bal;
+
+      return acc;
+    },
+    { count: 0, kg: 0, l: 0 }
+  );
 
   const updateQty = (i, key, val) => {
     const copy = [...rows];
@@ -127,158 +141,90 @@ function App() {
   };
 
   return (
-    <div style={{ minHeight: "100vh", background: "#f5f6fa", fontFamily: "Inter, Arial" }}>
+    <div style={{ minHeight: "100vh", background: "#f5f6fa" }}>
 
-      {/* HOME PAGE */}
-      {page === "home" && (
-        <div style={{
-          minHeight: "100vh",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          background: "linear-gradient(135deg,#4facfe,#6a11cb)"
-        }}>
-          <div style={{
-            background: "white",
-            padding: 40,
-            borderRadius: 16,
-            width: 380,
-            textAlign: "center",
-            boxShadow: "0 20px 40px rgba(0,0,0,0.15)"
-          }}>
-            <div style={{
-              width: 80,
-              height: 80,
-              borderRadius: 18,
-              background: "#6a11cb",
-              color: "white",
-              fontSize: 36,
-              fontWeight: "bold",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              margin: "0 auto 20px"
-            }}>
-              GH
-            </div>
-            <h2>Guest House Stock</h2>
-            <p style={{ color: "#555" }}>
-              Smart inventory system with AI-powered stock entry.
-            </p>
-            <button
-              onClick={() => setPage("app")}
-              style={{
-                marginTop: 20,
-                padding: "12px 26px",
-                borderRadius: 10,
-                border: "none",
-                background: "#6a11cb",
-                color: "white",
-                fontSize: 15,
-                cursor: "pointer"
-              }}
-            >
-              Enter App →
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* MAIN APP */}
       {page === "app" && (
-        <>
-          {/* Header */}
+        <div style={{ padding: 20 }}>
+
+          {/* 🔢 TOTAL DASHBOARD */}
           <div style={{
-            background: "white",
-            padding: "14px 20px",
-            boxShadow: "0 2px 10px rgba(0,0,0,0.08)",
             display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center"
+            gap: 20,
+            marginBottom: 20
           }}>
-            <strong>Guest House Stock Sheet</strong>
-            <button onClick={() => setPage("home")} style={{ border: "none", background: "none", cursor: "pointer" }}>
-              ⬅ Home
-            </button>
-          </div>
-
-          <div style={{ padding: 20 }}>
-            {/* AI Card */}
-            <div style={{
-              background: "white",
-              padding: 16,
-              borderRadius: 12,
-              boxShadow: "0 6px 16px rgba(0,0,0,0.08)",
-              marginBottom: 20
-            }}>
-              <input
-                style={{ width: "65%", padding: 10, borderRadius: 8, border: "1px solid #ccc" }}
-                placeholder="AI: add 2kg sugar 2025/01/01 opening"
-                value={command}
-                onChange={e => setCommand(e.target.value)}
-              />
-              <button onClick={runAI} style={{ marginLeft: 10 }}>🤖 Run</button>
-              <button onClick={addRow} style={{ marginLeft: 10 }}>➕ Row</button>
+            <div style={card}>
+              <h4>Total Countables</h4>
+              <strong>{totals.count}</strong>
             </div>
 
-            {/* Table Card */}
-            <div style={{
-              background: "white",
-              borderRadius: 12,
-              overflowX: "auto",
-              boxShadow: "0 6px 20px rgba(0,0,0,0.08)"
-            }}>
-              <table width="100%" cellPadding="6">
-                <thead style={{ background: "#f0f2f5" }}>
-                  <tr>
-                    <th>S.No</th><th>Item</th><th>Unit</th>
-                    <th>Opening Date</th><th>Opening Qty</th>
-                    <th>Out Date</th><th>Out Qty</th>
-                    <th>In Date</th><th>In Qty</th>
-                    <th>Out Date</th><th>Out Qty</th>
-                    <th>Balance</th><th>❌</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {rows.map((r, i) => (
-                    <tr key={i}>
-                      <td>{i + 1}</td>
-                      <td><input value={r.item} onChange={e => {
-                        const c = [...rows]; c[i].item = e.target.value; setRows(c);
-                      }} /></td>
-                      <td><b>{r.unit}</b></td>
-                      <td><input type="date" value={r.openDate} onChange={e => {
-                        const c = [...rows]; c[i].openDate = e.target.value; setRows(c);
-                      }} /></td>
-                      <td><input onChange={e => updateQty(i, "openQty", e.target.value)} /></td>
-                      <td><input type="date" value={r.outDate1} onChange={e => {
-                        const c = [...rows]; c[i].outDate1 = e.target.value; setRows(c);
-                      }} /></td>
-                      <td><input onChange={e => updateQty(i, "outQty1", e.target.value)} /></td>
-                      <td><input type="date" value={r.inDate} onChange={e => {
-                        const c = [...rows]; c[i].inDate = e.target.value; setRows(c);
-                      }} /></td>
-                      <td><input onChange={e => updateQty(i, "inQty", e.target.value)} /></td>
-                      <td><input type="date" value={r.outDate2} onChange={e => {
-                        const c = [...rows]; c[i].outDate2 = e.target.value; setRows(c);
-                      }} /></td>
-                      <td><input onChange={e => updateQty(i, "outQty2", e.target.value)} /></td>
-                      <td style={{ background: "#ffeaa7", fontWeight: "bold" }}>{balanceQty(r)}</td>
-                      <td><button onClick={() => deleteRow(i)}>🗑️</button></td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            <div style={card}>
+              <h4>Total Kg</h4>
+              <strong>{totals.kg.toFixed(2)} kg</strong>
+            </div>
+
+            <div style={card}>
+              <h4>Total Litres</h4>
+              <strong>{totals.l.toFixed(2)} L</strong>
             </div>
           </div>
-        </>
+
+          {/* AI */}
+          <input
+            style={{ width: "60%" }}
+            placeholder="AI: add 2kg sugar 2025/01/01 opening"
+            value={command}
+            onChange={e => setCommand(e.target.value)}
+          />
+          <button onClick={runAI}>🤖 Run</button>
+          <button onClick={addRow}>➕ Row</button>
+
+          {/* TABLE */}
+          <table width="100%" cellPadding="6" style={{ marginTop: 15 }}>
+            <thead>
+              <tr>
+                <th>#</th><th>Item</th><th>Unit</th>
+                <th>Open Date</th><th>Open Qty</th>
+                <th>Out Date</th><th>Out Qty</th>
+                <th>In Date</th><th>In Qty</th>
+                <th>Out Date</th><th>Out Qty</th>
+                <th>Balance</th><th>❌</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((r, i) => (
+                <tr key={i}>
+                  <td>{i + 1}</td>
+                  <td><input value={r.item} onChange={e => {
+                    const c = [...rows]; c[i].item = e.target.value; setRows(c);
+                  }} /></td>
+                  <td><b>{r.unit}</b></td>
+                  <td><input type="date" value={r.openDate} /></td>
+                  <td><input onChange={e => updateQty(i, "openQty", e.target.value)} /></td>
+                  <td><input type="date" /></td>
+                  <td><input onChange={e => updateQty(i, "outQty1", e.target.value)} /></td>
+                  <td><input type="date" /></td>
+                  <td><input onChange={e => updateQty(i, "inQty", e.target.value)} /></td>
+                  <td><input type="date" /></td>
+                  <td><input onChange={e => updateQty(i, "outQty2", e.target.value)} /></td>
+                  <td><b>{balanceQty(r)}</b></td>
+                  <td><button onClick={() => deleteRow(i)}>🗑️</button></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
     </div>
   );
 }
 
+const card = {
+  background: "white",
+  padding: 16,
+  borderRadius: 12,
+  boxShadow: "0 6px 16px rgba(0,0,0,0.1)",
+  minWidth: 160,
+  textAlign: "center"
+};
+
 ReactDOM.createRoot(document.getElementById("root")).render(<App />);
-
-
-
-
