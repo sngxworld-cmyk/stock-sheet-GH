@@ -37,15 +37,12 @@ function App() {
   const [command, setCommand] = useState("");
 
   const emptyRow = {
+    date: "",
     item: "",
     unit: "",
-    openDate: "",
     openQty: "",
-    inDate: "",
     inQty: "",
-    outDate: "",
-    outQty: "",
-    balDate: ""
+    outQty: ""
   };
 
   const [rows, setRows] = useState(() => {
@@ -141,11 +138,12 @@ function App() {
             <thead>
               <tr style={{ background: "#eee" }}>
                 <th>S.No</th>
+                <th>Date</th>
                 <th>Item</th>
                 <th>Unit</th>
-                <th>Opening Qty</th>
-                <th>In Qty</th>
-                <th>Out Qty</th>
+                <th>Opening</th>
+                <th>In</th>
+                <th>Out</th>
                 <th>Balance</th>
               </tr>
             </thead>
@@ -154,6 +152,19 @@ function App() {
               {rows.map((r, i) => (
                 <tr key={i}>
                   <td>{i + 1}</td>
+
+                  <td>
+                    <input
+                      type="date"
+                      value={r.date}
+                      onChange={e => {
+                        const copy = [...rows];
+                        copy[i].date = e.target.value;
+                        setRows(copy);
+                      }}
+                    />
+                  </td>
+
                   <td>
                     <input
                       value={r.item}
@@ -164,18 +175,23 @@ function App() {
                       }}
                     />
                   </td>
+
                   <td style={{ background: "#f0f0f0", fontWeight: "bold" }}>
                     {r.unit}
                   </td>
+
                   <td>
                     <input onChange={e => updateQty(i, "openQty", e.target.value)} />
                   </td>
+
                   <td>
                     <input onChange={e => updateQty(i, "inQty", e.target.value)} />
                   </td>
+
                   <td>
                     <input onChange={e => updateQty(i, "outQty", e.target.value)} />
                   </td>
+
                   <td style={{ background: "#ffeaa7", fontWeight: "bold" }}>
                     {balanceQty(r)}
                   </td>
@@ -190,7 +206,6 @@ function App() {
 }
 
 ReactDOM.createRoot(document.getElementById("root")).render(<App />);
-
 
 
 
