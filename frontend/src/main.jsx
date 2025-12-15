@@ -71,7 +71,8 @@ function App() {
   };
 
   const addRow = () => setRows([...rows, { ...emptyRow }]);
-  const deleteRow = (i) => rows.length > 1 && setRows(rows.filter((_, x) => x !== i));
+  const deleteRow = (i) =>
+    rows.length > 1 && setRows(rows.filter((_, x) => x !== i));
 
   const runAI = () => {
     const words = command.toLowerCase().split(" ");
@@ -126,147 +127,158 @@ function App() {
   };
 
   return (
-    <div style={{ fontFamily: "Arial", minHeight: "100vh" }}>
-      {/* 🔹 HOME PAGE */}
+    <div style={{ minHeight: "100vh", background: "#f5f6fa", fontFamily: "Inter, Arial" }}>
+
+      {/* HOME PAGE */}
       {page === "home" && (
-        <div
-          style={{
-            height: "100vh",
-            display: "flex",
-            flexDirection: "column",
-            justifyContent: "center",
-            alignItems: "center",
-            background: "linear-gradient(135deg, #0984e3, #6c5ce7)",
-            color: "white",
-            textAlign: "center"
-          }}
-        >
-          <div
-            style={{
-              width: 90,
-              height: 90,
-              borderRadius: 20,
-              background: "white",
-              color: "#6c5ce7",
-              fontSize: 40,
+        <div style={{
+          minHeight: "100vh",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          background: "linear-gradient(135deg,#4facfe,#6a11cb)"
+        }}>
+          <div style={{
+            background: "white",
+            padding: 40,
+            borderRadius: 16,
+            width: 380,
+            textAlign: "center",
+            boxShadow: "0 20px 40px rgba(0,0,0,0.15)"
+          }}>
+            <div style={{
+              width: 80,
+              height: 80,
+              borderRadius: 18,
+              background: "#6a11cb",
+              color: "white",
+              fontSize: 36,
               fontWeight: "bold",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              marginBottom: 20
-            }}
-          >
-            GH
+              margin: "0 auto 20px"
+            }}>
+              GH
+            </div>
+            <h2>Guest House Stock</h2>
+            <p style={{ color: "#555" }}>
+              Smart inventory system with AI-powered stock entry.
+            </p>
+            <button
+              onClick={() => setPage("app")}
+              style={{
+                marginTop: 20,
+                padding: "12px 26px",
+                borderRadius: 10,
+                border: "none",
+                background: "#6a11cb",
+                color: "white",
+                fontSize: 15,
+                cursor: "pointer"
+              }}
+            >
+              Enter App →
+            </button>
           </div>
-
-          <h1>Guest House Stock Sheet</h1>
-          <p style={{ maxWidth: 420 }}>
-            Smart inventory management with AI-powered stock entry and automatic balance calculation.
-          </p>
-
-          <button
-            onClick={() => setPage("app")}
-            style={{
-              marginTop: 30,
-              padding: "12px 30px",
-              fontSize: 16,
-              borderRadius: 8,
-              border: "none",
-              cursor: "pointer",
-              background: "white",
-              color: "#6c5ce7",
-              fontWeight: "bold"
-            }}
-          >
-            Enter Stock Sheet →
-          </button>
         </div>
       )}
 
-      {/* 🔹 MAIN APP */}
+      {/* MAIN APP */}
       {page === "app" && (
-        <div style={{ padding: 20 }}>
-          <button onClick={() => setPage("home")} style={{ marginBottom: 10 }}>
-            ← Home
-          </button>
+        <>
+          {/* Header */}
+          <div style={{
+            background: "white",
+            padding: "14px 20px",
+            boxShadow: "0 2px 10px rgba(0,0,0,0.08)",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center"
+          }}>
+            <strong>Guest House Stock Sheet</strong>
+            <button onClick={() => setPage("home")} style={{ border: "none", background: "none", cursor: "pointer" }}>
+              ⬅ Home
+            </button>
+          </div>
 
-          <h2>Guest House Stock Sheet</h2>
+          <div style={{ padding: 20 }}>
+            {/* AI Card */}
+            <div style={{
+              background: "white",
+              padding: 16,
+              borderRadius: 12,
+              boxShadow: "0 6px 16px rgba(0,0,0,0.08)",
+              marginBottom: 20
+            }}>
+              <input
+                style={{ width: "65%", padding: 10, borderRadius: 8, border: "1px solid #ccc" }}
+                placeholder="AI: add 2kg sugar 2025/01/01 opening"
+                value={command}
+                onChange={e => setCommand(e.target.value)}
+              />
+              <button onClick={runAI} style={{ marginLeft: 10 }}>🤖 Run</button>
+              <button onClick={addRow} style={{ marginLeft: 10 }}>➕ Row</button>
+            </div>
 
-          <input
-            style={{ width: "60%" }}
-            placeholder="AI: add 2kg sugar 2025/01/01 opening"
-            value={command}
-            onChange={e => setCommand(e.target.value)}
-          />
-          <button onClick={runAI} style={{ marginLeft: 10 }}>🤖 Run</button>
-          <button onClick={addRow} style={{ marginLeft: 10 }}>➕ Add Row</button>
-
-          <table border="1" cellPadding="6" width="100%" style={{ marginTop: 15 }}>
-            <thead>
-              <tr style={{ background: "#eee" }}>
-                <th>S.No</th>
-                <th>Item</th>
-                <th>Unit</th>
-                <th>Opening Date</th>
-                <th>Opening Qty</th>
-                <th>Out Date</th>
-                <th>Out Qty</th>
-                <th>In Date</th>
-                <th>In Qty</th>
-                <th>Out Date</th>
-                <th>Out Qty</th>
-                <th>Balance</th>
-                <th>Delete</th>
-              </tr>
-            </thead>
-
-            <tbody>
-              {rows.map((r, i) => (
-                <tr key={i}>
-                  <td>{i + 1}</td>
-                  <td><input value={r.item} onChange={e => {
-                    const c = [...rows]; c[i].item = e.target.value; setRows(c);
-                  }} /></td>
-                  <td style={{ background: "#f0f0f0", fontWeight: "bold" }}>{r.unit}</td>
-
-                  <td><input type="date" value={r.openDate} onChange={e => {
-                    const c = [...rows]; c[i].openDate = e.target.value; setRows(c);
-                  }} /></td>
-                  <td><input onChange={e => updateQty(i, "openQty", e.target.value)} /></td>
-
-                  <td><input type="date" value={r.outDate1} onChange={e => {
-                    const c = [...rows]; c[i].outDate1 = e.target.value; setRows(c);
-                  }} /></td>
-                  <td><input onChange={e => updateQty(i, "outQty1", e.target.value)} /></td>
-
-                  <td><input type="date" value={r.inDate} onChange={e => {
-                    const c = [...rows]; c[i].inDate = e.target.value; setRows(c);
-                  }} /></td>
-                  <td><input onChange={e => updateQty(i, "inQty", e.target.value)} /></td>
-
-                  <td><input type="date" value={r.outDate2} onChange={e => {
-                    const c = [...rows]; c[i].outDate2 = e.target.value; setRows(c);
-                  }} /></td>
-                  <td><input onChange={e => updateQty(i, "outQty2", e.target.value)} /></td>
-
-                  <td style={{ background: "#ffeaa7", fontWeight: "bold" }}>
-                    {balanceQty(r)}
-                  </td>
-
-                  <td>
-                    <button onClick={() => deleteRow(i)} disabled={rows.length === 1}>🗑️</button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+            {/* Table Card */}
+            <div style={{
+              background: "white",
+              borderRadius: 12,
+              overflowX: "auto",
+              boxShadow: "0 6px 20px rgba(0,0,0,0.08)"
+            }}>
+              <table width="100%" cellPadding="6">
+                <thead style={{ background: "#f0f2f5" }}>
+                  <tr>
+                    <th>S.No</th><th>Item</th><th>Unit</th>
+                    <th>Opening Date</th><th>Opening Qty</th>
+                    <th>Out Date</th><th>Out Qty</th>
+                    <th>In Date</th><th>In Qty</th>
+                    <th>Out Date</th><th>Out Qty</th>
+                    <th>Balance</th><th>❌</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {rows.map((r, i) => (
+                    <tr key={i}>
+                      <td>{i + 1}</td>
+                      <td><input value={r.item} onChange={e => {
+                        const c = [...rows]; c[i].item = e.target.value; setRows(c);
+                      }} /></td>
+                      <td><b>{r.unit}</b></td>
+                      <td><input type="date" value={r.openDate} onChange={e => {
+                        const c = [...rows]; c[i].openDate = e.target.value; setRows(c);
+                      }} /></td>
+                      <td><input onChange={e => updateQty(i, "openQty", e.target.value)} /></td>
+                      <td><input type="date" value={r.outDate1} onChange={e => {
+                        const c = [...rows]; c[i].outDate1 = e.target.value; setRows(c);
+                      }} /></td>
+                      <td><input onChange={e => updateQty(i, "outQty1", e.target.value)} /></td>
+                      <td><input type="date" value={r.inDate} onChange={e => {
+                        const c = [...rows]; c[i].inDate = e.target.value; setRows(c);
+                      }} /></td>
+                      <td><input onChange={e => updateQty(i, "inQty", e.target.value)} /></td>
+                      <td><input type="date" value={r.outDate2} onChange={e => {
+                        const c = [...rows]; c[i].outDate2 = e.target.value; setRows(c);
+                      }} /></td>
+                      <td><input onChange={e => updateQty(i, "outQty2", e.target.value)} /></td>
+                      <td style={{ background: "#ffeaa7", fontWeight: "bold" }}>{balanceQty(r)}</td>
+                      <td><button onClick={() => deleteRow(i)}>🗑️</button></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </>
       )}
     </div>
   );
 }
 
 ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+
 
 
 
