@@ -58,7 +58,6 @@ function App() {
   const [showApp, setShowApp] = useState(false);
 
   return (
-return (
   <div style={{
     minHeight: "100vh",
     background: "#f4f6f8",
