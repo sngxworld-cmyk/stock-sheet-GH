@@ -54,82 +54,26 @@ function parseCommand(text) {
 
 /* ---------- APP ---------- */
 function App() {
-  function App() {
   const [showApp, setShowApp] = useState(false);
 
   return (
-  <div style={{
-    minHeight: "100vh",
-    background: "#f4f6f8",
-    fontFamily: "Arial, sans-serif"
-  }}>
-
-    {/* ===== OPENING PAGE ===== */}
-    {!showApp && (
-      <div style={{
-        display: "flex",
-        flexDirection: "column",
-        justifyContent: "center",
-        alignItems: "center",
-        height: "100vh",
-        textAlign: "center"
-      }}>
-        <h1 style={{ fontSize: 36 }}>🏨 Guest House Stock Manager</h1>
-        <p style={{ fontSize: 18, color: "#555", maxWidth: 500 }}>
-          Smart inventory management with AI assistance,
-          unit conversion, and export features.
-        </p>
-
-        <button
-          style={{
-            marginTop: 30,
-            padding: "12px 30px",
-            fontSize: 18,
-            borderRadius: 8,
-            border: "none",
-            background: "#1976d2",
-            color: "white",
-            cursor: "pointer"
-          }}
-          onClick={() => setShowApp(true)}
-        >
-          Open Stock Sheet
-        </button>
-      </div>
-    )}
-
-    {/* ===== MAIN APP ===== */}
-    {showApp && (
-      <div style={{ padding: 20 }}>
-        <h2>🏨 Guest House Stock Sheet</h2>
-
-        {/* EXPORT BUTTONS */}
-        <div style={{ marginBottom: 15 }}>
-          <button onClick={exportExcel}>📤 Export Excel</button>
-          <button onClick={exportPDF} style={{ marginLeft: 10 }}>
-            📄 Export PDF
+    <div>
+      {!showApp ? (
+        <div>
+          <h1>🏨 Guest House Stock Manager</h1>
+          <button onClick={() => setShowApp(true)}>
+            Open Stock Sheet
           </button>
         </div>
-
-        {/* AI BOT */}
-        <div style={{ marginBottom: 15 }}>
-          <input
-            style={{ width: "70%" }}
-            placeholder="AI command (eg: add 2kg sugar today)"
-            value={command}
-            onChange={e => setCommand(e.target.value)}
-          />
-          <button onClick={runCommand} style={{ marginLeft: 10 }}>
-            🤖 Run
-          </button>
+      ) : (
+        <div>
+          <h2>Guest House Stock Sheet</h2>
+          {/* your existing buttons + table here */}
         </div>
-
-        {/* YOUR TABLE (UNCHANGED) */}
-        {/* ⬇️ KEEP YOUR EXISTING TABLE CODE HERE ⬇️ */}
-      </div>
-    )}
-  </div>
-);
+      )}
+    </div>
+  );
+}
 
   const [rows, setRows] = useState([
     {
