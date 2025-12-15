@@ -3,23 +3,21 @@ import ReactDOM from "react-dom/client";
 
 const STORAGE_KEY = "guest_house_stock_data";
 
-/* =====================
-   UNIT DETECTION
-===================== */
-const liquidItems = ["milk", "water", "oil", "juice"];
 const weightItems = ["rice", "sugar", "flour", "dhal"];
+const liquidItems = ["milk", "water", "oil", "juice"];
 const countItems = ["egg", "eggs", "soap", "bottle", "chair"];
 
-function detectUnit(item, rawQty) {
-  if (!rawQty) return { qty: "", unit: "" };
+function normalizeUnit(qtyText, item) {
+  if (!qtyText) return { qty: "", unit: "" };
 
-  const num = parseFloat(rawQty);
-  const hasKg = rawQty.includes("kg");
-  const hasG = rawQty.includes("g");
-  const hasL = rawQty.includes("l");
-  const hasMl = rawQty.includes("ml");
+  const text = qtyText.toLowerCase();
+  const num = parseFloat(text);
+  if (isNaN(num)) return { qty: "", unit: "" };
 
-  if (hasKg) return { qty: num, unit: "packet" };
+  if (text.includes("kg")) return { qty: num, unit: "packet" };
+  if (text.includes("g")) return { qty: num, unit: "g" };
+  if (text.includes("ml")) return { qty: num, unit: "ml" };
+  if (text.includes("l")) return { qty: num, unit: "L" };
 
   if (weightItems.some(w => item.includes(w))) {
     if (num >= 1000) return { qty: num / 1000, unit: "kg" };
@@ -55,16 +53,10 @@ function App() {
     return saved ? JSON.parse(saved) : [{ ...emptyRow }];
   });
 
-  /* =====================
-     AUTO SAVE
-  ===================== */
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(rows));
   }, [rows]);
 
-  /* =====================
-     FORMULA
-  ===================== */
   const balanceQty = (r) => {
     const o = parseFloat(r.openQty) || 0;
     const i = parseFloat(r.inQty) || 0;
@@ -73,35 +65,45 @@ function App() {
     return o + i - out;
   };
 
-  const update = (i, key, val) => {
+  const updateQty = (i, key, val) => {
     const copy = [...rows];
-    copy[i][key] = val;
+    const item = copy[i].item.toLowerCase();
+    const { qty, unit } = normalizeUnit(val, item);
+    copy[i][key] = qty;
+    copy[i].unit = unit;
     setRows(copy);
   };
 
-  const addRow = () => setRows([...rows, { ...emptyRow }]);
-  const deleteRow = (i) => setRows(rows.filter((_, idx) => idx !== i));
-
-  /* =====================
-     AI COMMAND
-  ===================== */
   const runAI = () => {
-    const parts = command.toLowerCase().split(" ");
-    if (parts.length < 4) return alert("Example: add sugar in 1kg");
+    const words = command.toLowerCase().split(" ");
+    let item = "";
+    let type = "";
+    let qtyText = "";
 
-    const item = parts[1];
-    const type = parts[2];
-    const qtyRaw = parts[3];
+    words.forEach(w => {
+      if (["opening", "in", "out"].includes(w)) type = w;
+      if (/\d/.test(w)) qtyText = w;
+    });
 
-    let idx = rows.findIndex(r => r.item.toLowerCase() === item);
+    item = words.find(w =>
+      !["add", "opening", "in", "out"].includes(w) &&
+      !/\d/.test(w)
+    );
+
+    if (!item || !type || !qtyText) {
+      alert("Example: add 2kg sugar opening");
+      return;
+    }
+
     const copy = [...rows];
+    let idx = copy.findIndex(r => r.item.toLowerCase() === item);
 
     if (idx === -1) {
       copy.push({ ...emptyRow, item });
       idx = copy.length - 1;
     }
 
-    const { qty, unit } = detectUnit(item, qtyRaw);
+    const { qty, unit } = normalizeUnit(qtyText, item);
     copy[idx].unit = unit;
 
     if (type === "opening") copy[idx].openQty = qty;
@@ -126,7 +128,7 @@ function App() {
           <div style={{ marginBottom: 15 }}>
             <input
               style={{ width: "60%" }}
-              placeholder="AI: add sugar in 1kg"
+              placeholder="AI: add 2kg sugar opening"
               value={command}
               onChange={e => setCommand(e.target.value)}
             />
@@ -135,27 +137,16 @@ function App() {
             </button>
           </div>
 
-          <button onClick={addRow}>➕ Add Item</button>
-
-          <table border="1" cellPadding="6" style={{ marginTop: 15, width: "100%" }}>
+          <table border="1" cellPadding="6" width="100%">
             <thead>
               <tr style={{ background: "#eee" }}>
                 <th>S.No</th>
                 <th>Item</th>
                 <th>Unit</th>
-                <th colSpan="2">Opening</th>
-                <th colSpan="2">In</th>
-                <th colSpan="2">Out</th>
-                <th colSpan="2">Balance</th>
-                <th>❌</th>
-              </tr>
-              <tr>
-                <th></th><th></th><th></th>
-                <th>Date</th><th>Qty</th>
-                <th>Date</th><th>Qty</th>
-                <th>Date</th><th>Qty</th>
-                <th>Date</th><th>Qty</th>
-                <th></th>
+                <th>Opening Qty</th>
+                <th>In Qty</th>
+                <th>Out Qty</th>
+                <th>Balance</th>
               </tr>
             </thead>
 
@@ -163,25 +154,31 @@ function App() {
               {rows.map((r, i) => (
                 <tr key={i}>
                   <td>{i + 1}</td>
-                  <td><input value={r.item} onChange={e => update(i, "item", e.target.value)} /></td>
-                  <td><input value={r.unit} onChange={e => update(i, "unit", e.target.value)} /></td>
-
-                  <td><input value={r.openDate} onChange={e => update(i, "openDate", e.target.value)} /></td>
-                  <td><input value={r.openQty} onChange={e => update(i, "openQty", e.target.value)} /></td>
-
-                  <td><input value={r.inDate} onChange={e => update(i, "inDate", e.target.value)} /></td>
-                  <td><input value={r.inQty} onChange={e => update(i, "inQty", e.target.value)} /></td>
-
-                  <td><input value={r.outDate} onChange={e => update(i, "outDate", e.target.value)} /></td>
-                  <td><input value={r.outQty} onChange={e => update(i, "outQty", e.target.value)} /></td>
-
-                  <td><input value={r.balDate} onChange={e => update(i, "balDate", e.target.value)} /></td>
-
+                  <td>
+                    <input
+                      value={r.item}
+                      onChange={e => {
+                        const copy = [...rows];
+                        copy[i].item = e.target.value;
+                        setRows(copy);
+                      }}
+                    />
+                  </td>
+                  <td style={{ background: "#f0f0f0", fontWeight: "bold" }}>
+                    {r.unit}
+                  </td>
+                  <td>
+                    <input onChange={e => updateQty(i, "openQty", e.target.value)} />
+                  </td>
+                  <td>
+                    <input onChange={e => updateQty(i, "inQty", e.target.value)} />
+                  </td>
+                  <td>
+                    <input onChange={e => updateQty(i, "outQty", e.target.value)} />
+                  </td>
                   <td style={{ background: "#ffeaa7", fontWeight: "bold" }}>
                     {balanceQty(r)}
                   </td>
-
-                  <td><button onClick={() => deleteRow(i)}>🗑</button></td>
                 </tr>
               ))}
             </tbody>
