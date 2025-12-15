@@ -1,5 +1,38 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import ReactDOM from "react-dom/client";
+
+const STORAGE_KEY = "guest_house_stock_data";
+
+/* =====================
+   UNIT DETECTION
+===================== */
+const liquidItems = ["milk", "water", "oil", "juice"];
+const weightItems = ["rice", "sugar", "flour", "dhal"];
+const countItems = ["egg", "eggs", "soap", "bottle", "chair"];
+
+function detectUnit(item, rawQty) {
+  if (!rawQty) return { qty: "", unit: "" };
+
+  const num = parseFloat(rawQty);
+  const hasKg = rawQty.includes("kg");
+  const hasG = rawQty.includes("g");
+  const hasL = rawQty.includes("l");
+  const hasMl = rawQty.includes("ml");
+
+  if (hasKg) return { qty: num, unit: "packet" };
+
+  if (weightItems.some(w => item.includes(w))) {
+    if (num >= 1000) return { qty: num / 1000, unit: "kg" };
+    return { qty: num, unit: "g" };
+  }
+
+  if (liquidItems.some(l => item.includes(l))) {
+    if (num >= 1000) return { qty: num / 1000, unit: "L" };
+    return { qty: num, unit: "ml" };
+  }
+
+  return { qty: num, unit: "count" };
+}
 
 function App() {
   const [showApp, setShowApp] = useState(false);
@@ -17,19 +50,17 @@ function App() {
     balDate: ""
   };
 
-  const [rows, setRows] = useState([ { ...emptyRow } ]);
+  const [rows, setRows] = useState(() => {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    return saved ? JSON.parse(saved) : [{ ...emptyRow }];
+  });
 
   /* =====================
-     ROW FUNCTIONS
+     AUTO SAVE
   ===================== */
-  const addRow = () => setRows([...rows, { ...emptyRow }]);
-  const deleteRow = (i) => setRows(rows.filter((_, idx) => idx !== i));
-
-  const update = (i, key, val) => {
-    const copy = [...rows];
-    copy[i][key] = val;
-    setRows(copy);
-  };
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(rows));
+  }, [rows]);
 
   /* =====================
      FORMULA
@@ -42,26 +73,36 @@ function App() {
     return o + i - out;
   };
 
+  const update = (i, key, val) => {
+    const copy = [...rows];
+    copy[i][key] = val;
+    setRows(copy);
+  };
+
+  const addRow = () => setRows([...rows, { ...emptyRow }]);
+  const deleteRow = (i) => setRows(rows.filter((_, idx) => idx !== i));
+
   /* =====================
-     SIMPLE AI COMMAND
-     format:
-     add <item> <opening|in|out> <qty>
+     AI COMMAND
   ===================== */
   const runAI = () => {
     const parts = command.toLowerCase().split(" ");
-    if (parts.length < 4) return alert("Invalid command");
+    if (parts.length < 4) return alert("Example: add sugar in 1kg");
 
     const item = parts[1];
     const type = parts[2];
-    const qty = parts[3];
+    const qtyRaw = parts[3];
 
     let idx = rows.findIndex(r => r.item.toLowerCase() === item);
+    const copy = [...rows];
+
     if (idx === -1) {
-      rows.push({ ...emptyRow, item });
-      idx = rows.length - 1;
+      copy.push({ ...emptyRow, item });
+      idx = copy.length - 1;
     }
 
-    const copy = [...rows];
+    const { qty, unit } = detectUnit(item, qtyRaw);
+    copy[idx].unit = unit;
 
     if (type === "opening") copy[idx].openQty = qty;
     if (type === "in") copy[idx].inQty = qty;
@@ -82,13 +123,12 @@ function App() {
         <>
           <h2>Guest House Stock Sheet</h2>
 
-          {/* AI INPUT */}
           <div style={{ marginBottom: 15 }}>
             <input
               style={{ width: "60%" }}
-              placeholder="AI command: add sugar opening 5"
+              placeholder="AI: add sugar in 1kg"
               value={command}
-              onChange={(e) => setCommand(e.target.value)}
+              onChange={e => setCommand(e.target.value)}
             />
             <button onClick={runAI} style={{ marginLeft: 10 }}>
               🤖 Run
@@ -97,15 +137,7 @@ function App() {
 
           <button onClick={addRow}>➕ Add Item</button>
 
-          <table
-            border="1"
-            cellPadding="6"
-            style={{
-              marginTop: 15,
-              borderCollapse: "collapse",
-              width: "100%"
-            }}
-          >
+          <table border="1" cellPadding="6" style={{ marginTop: 15, width: "100%" }}>
             <thead>
               <tr style={{ background: "#eee" }}>
                 <th>S.No</th>
@@ -117,7 +149,7 @@ function App() {
                 <th colSpan="2">Balance</th>
                 <th>❌</th>
               </tr>
-              <tr style={{ background: "#f9f9f9" }}>
+              <tr>
                 <th></th><th></th><th></th>
                 <th>Date</th><th>Qty</th>
                 <th>Date</th><th>Qty</th>
@@ -131,46 +163,25 @@ function App() {
               {rows.map((r, i) => (
                 <tr key={i}>
                   <td>{i + 1}</td>
+                  <td><input value={r.item} onChange={e => update(i, "item", e.target.value)} /></td>
+                  <td><input value={r.unit} onChange={e => update(i, "unit", e.target.value)} /></td>
 
-                  <td>
-                    <input value={r.item}
-                      onChange={e => update(i, "item", e.target.value)} />
-                  </td>
+                  <td><input value={r.openDate} onChange={e => update(i, "openDate", e.target.value)} /></td>
+                  <td><input value={r.openQty} onChange={e => update(i, "openQty", e.target.value)} /></td>
 
-                  <td>
-                    <input value={r.unit}
-                      onChange={e => update(i, "unit", e.target.value)} />
-                  </td>
+                  <td><input value={r.inDate} onChange={e => update(i, "inDate", e.target.value)} /></td>
+                  <td><input value={r.inQty} onChange={e => update(i, "inQty", e.target.value)} /></td>
 
-                  <td><input value={r.openDate}
-                      onChange={e => update(i, "openDate", e.target.value)} /></td>
-                  <td><input value={r.openQty}
-                      onChange={e => update(i, "openQty", e.target.value)} /></td>
+                  <td><input value={r.outDate} onChange={e => update(i, "outDate", e.target.value)} /></td>
+                  <td><input value={r.outQty} onChange={e => update(i, "outQty", e.target.value)} /></td>
 
-                  <td><input value={r.inDate}
-                      onChange={e => update(i, "inDate", e.target.value)} /></td>
-                  <td><input value={r.inQty}
-                      onChange={e => update(i, "inQty", e.target.value)} /></td>
+                  <td><input value={r.balDate} onChange={e => update(i, "balDate", e.target.value)} /></td>
 
-                  <td><input value={r.outDate}
-                      onChange={e => update(i, "outDate", e.target.value)} /></td>
-                  <td><input value={r.outQty}
-                      onChange={e => update(i, "outQty", e.target.value)} /></td>
-
-                  <td><input value={r.balDate}
-                      onChange={e => update(i, "balDate", e.target.value)} /></td>
-
-                  <td style={{
-                    background: "#ffeaa7",
-                    fontWeight: "bold",
-                    textAlign: "center"
-                  }}>
+                  <td style={{ background: "#ffeaa7", fontWeight: "bold" }}>
                     {balanceQty(r)}
                   </td>
 
-                  <td>
-                    <button onClick={() => deleteRow(i)}>🗑</button>
-                  </td>
+                  <td><button onClick={() => deleteRow(i)}>🗑</button></td>
                 </tr>
               ))}
             </tbody>
@@ -182,7 +193,6 @@ function App() {
 }
 
 ReactDOM.createRoot(document.getElementById("root")).render(<App />);
-
 
 
 
