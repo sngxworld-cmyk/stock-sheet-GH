@@ -8,23 +8,31 @@ function App() {
     {
       item: "",
       unit: "",
-      d1_open: "",
-      d1_in: "",
-      d1_out: "",
-      d2_open: "",
-      d2_in: "",
-      d2_out: "",
-      d3_open: "",
-      d3_in: "",
-      d3_out: "",
-      d4_open: "",
-      d4_in: "",
-      d4_out: ""
+      openDate: "2025/01/01",
+      openQty: "",
+      inDate: "2025/01/01",
+      inQty: "",
+      outDate: "2025/01/01",
+      outQty: "",
+      balDate: "2025/01/01"
     }
   ]);
 
   const addRow = () => {
-    setRows([...rows, { ...rows[0], item: "", unit: "" }]);
+    setRows([
+      ...rows,
+      {
+        item: "",
+        unit: "",
+        openDate: "2025/01/01",
+        openQty: "",
+        inDate: "2025/01/01",
+        inQty: "",
+        outDate: "2025/01/01",
+        outQty: "",
+        balDate: "2025/01/01"
+      }
+    ]);
   };
 
   const deleteRow = (i) => {
@@ -37,53 +45,60 @@ function App() {
     setRows(copy);
   };
 
-  const closing = (r) => {
-    const totalIn =
-      (+r.d1_in || 0) + (+r.d2_in || 0) + (+r.d3_in || 0) + (+r.d4_in || 0);
-    const totalOut =
-      (+r.d1_out || 0) + (+r.d2_out || 0) + (+r.d3_out || 0) + (+r.d4_out || 0);
-    const opening = +r.d1_open || 0;
-    return opening + totalIn - totalOut;
+  const balanceQty = (r) => {
+    const o = parseFloat(r.openQty) || 0;
+    const i = parseFloat(r.inQty) || 0;
+    const out = parseFloat(r.outQty) || 0;
+
+    if (!r.openQty && !r.inQty && !r.outQty) return "";
+    return o + i - out;
   };
 
   return (
     <div style={{ fontFamily: "Arial", padding: 20 }}>
       {!showApp ? (
-        <div style={{ textAlign: "center", marginTop: 100 }}>
+        <div style={{ textAlign: "center", marginTop: 120 }}>
           <h1>🏨 Guest House Stock Manager</h1>
           <button onClick={() => setShowApp(true)}>Open App</button>
         </div>
       ) : (
         <>
           <h2>Guest House Stock Sheet</h2>
-
           <button onClick={addRow}>➕ Add Item</button>
 
-          <table border="1" cellPadding="5" style={{ marginTop: 15 }}>
+          <table
+            border="1"
+            cellPadding="6"
+            style={{
+              marginTop: 15,
+              borderCollapse: "collapse",
+              width: "100%"
+            }}
+          >
             <thead>
-              <tr>
+              <tr style={{ background: "#eee" }}>
                 <th>S.No</th>
                 <th>Item</th>
                 <th>Unit</th>
-
-                <th colSpan="3">Date 1</th>
-                <th colSpan="3">Date 2</th>
-                <th colSpan="3">Date 3</th>
-                <th colSpan="3">Date 4</th>
-
-                <th>Closing</th>
+                <th colSpan="2">Opening</th>
+                <th colSpan="2">In</th>
+                <th colSpan="2">Out</th>
+                <th colSpan="2">Balance</th>
                 <th>❌</th>
               </tr>
-              <tr>
-                <th></th><th></th><th></th>
-                {Array(4).fill(0).map((_, i) => (
-                  <React.Fragment key={i}>
-                    <th>Open</th>
-                    <th>In</th>
-                    <th>Out</th>
-                  </React.Fragment>
-                ))}
-                <th></th><th></th>
+              <tr style={{ background: "#f9f9f9" }}>
+                <th></th>
+                <th></th>
+                <th></th>
+                <th>Date</th>
+                <th>Qty</th>
+                <th>Date</th>
+                <th>Qty</th>
+                <th>Date</th>
+                <th>Qty</th>
+                <th>Date</th>
+                <th>Qty</th>
+                <th></th>
               </tr>
             </thead>
 
@@ -91,23 +106,74 @@ function App() {
               {rows.map((r, i) => (
                 <tr key={i}>
                   <td>{i + 1}</td>
+
                   <td>
-                    <input value={r.item} onChange={e => update(i, "item", e.target.value)} />
-                  </td>
-                  <td>
-                    <input value={r.unit} onChange={e => update(i, "unit", e.target.value)} />
+                    <input
+                      value={r.item}
+                      onChange={(e) => update(i, "item", e.target.value)}
+                    />
                   </td>
 
-                  {["d1", "d2", "d3", "d4"].map(d => (
-                    <React.Fragment key={d}>
-                      <td><input onChange={e => update(i, `${d}_open`, e.target.value)} /></td>
-                      <td><input onChange={e => update(i, `${d}_in`, e.target.value)} /></td>
-                      <td><input onChange={e => update(i, `${d}_out`, e.target.value)} /></td>
-                    </React.Fragment>
-                  ))}
+                  <td>
+                    <input
+                      value={r.unit}
+                      onChange={(e) => update(i, "unit", e.target.value)}
+                    />
+                  </td>
 
-                  <td style={{ background: "#ffeaa7", fontWeight: "bold" }}>
-                    {closing(r)}
+                  <td>
+                    <input
+                      value={r.openDate}
+                      onChange={(e) => update(i, "openDate", e.target.value)}
+                    />
+                  </td>
+                  <td>
+                    <input
+                      value={r.openQty}
+                      onChange={(e) => update(i, "openQty", e.target.value)}
+                    />
+                  </td>
+
+                  <td>
+                    <input
+                      value={r.inDate}
+                      onChange={(e) => update(i, "inDate", e.target.value)}
+                    />
+                  </td>
+                  <td>
+                    <input
+                      value={r.inQty}
+                      onChange={(e) => update(i, "inQty", e.target.value)}
+                    />
+                  </td>
+
+                  <td>
+                    <input
+                      value={r.outDate}
+                      onChange={(e) => update(i, "outDate", e.target.value)}
+                    />
+                  </td>
+                  <td>
+                    <input
+                      value={r.outQty}
+                      onChange={(e) => update(i, "outQty", e.target.value)}
+                    />
+                  </td>
+
+                  <td>
+                    <input
+                      value={r.balDate}
+                      onChange={(e) => update(i, "balDate", e.target.value)}
+                    />
+                  </td>
+                  <td
+                    style={{
+                      background: "#ffeaa7",
+                      fontWeight: "bold",
+                      textAlign: "center"
+                    }}
+                  >
+                    {balanceQty(r)}
                   </td>
 
                   <td>
