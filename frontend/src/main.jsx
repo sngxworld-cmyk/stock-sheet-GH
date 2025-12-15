@@ -3,41 +3,27 @@ import ReactDOM from "react-dom/client";
 
 function App() {
   const [showApp, setShowApp] = useState(false);
+  const [command, setCommand] = useState("");
 
-  const [rows, setRows] = useState([
-    {
-      item: "",
-      unit: "",
-      openDate: "2025/01/01",
-      openQty: "",
-      inDate: "2025/01/01",
-      inQty: "",
-      outDate: "2025/01/01",
-      outQty: "",
-      balDate: "2025/01/01"
-    }
-  ]);
-
-  const addRow = () => {
-    setRows([
-      ...rows,
-      {
-        item: "",
-        unit: "",
-        openDate: "2025/01/01",
-        openQty: "",
-        inDate: "2025/01/01",
-        inQty: "",
-        outDate: "2025/01/01",
-        outQty: "",
-        balDate: "2025/01/01"
-      }
-    ]);
+  const emptyRow = {
+    item: "",
+    unit: "",
+    openDate: "",
+    openQty: "",
+    inDate: "",
+    inQty: "",
+    outDate: "",
+    outQty: "",
+    balDate: ""
   };
 
-  const deleteRow = (i) => {
-    setRows(rows.filter((_, idx) => idx !== i));
-  };
+  const [rows, setRows] = useState([ { ...emptyRow } ]);
+
+  /* =====================
+     ROW FUNCTIONS
+  ===================== */
+  const addRow = () => setRows([...rows, { ...emptyRow }]);
+  const deleteRow = (i) => setRows(rows.filter((_, idx) => idx !== i));
 
   const update = (i, key, val) => {
     const copy = [...rows];
@@ -45,13 +31,44 @@ function App() {
     setRows(copy);
   };
 
+  /* =====================
+     FORMULA
+  ===================== */
   const balanceQty = (r) => {
     const o = parseFloat(r.openQty) || 0;
     const i = parseFloat(r.inQty) || 0;
     const out = parseFloat(r.outQty) || 0;
-
     if (!r.openQty && !r.inQty && !r.outQty) return "";
     return o + i - out;
+  };
+
+  /* =====================
+     SIMPLE AI COMMAND
+     format:
+     add <item> <opening|in|out> <qty>
+  ===================== */
+  const runAI = () => {
+    const parts = command.toLowerCase().split(" ");
+    if (parts.length < 4) return alert("Invalid command");
+
+    const item = parts[1];
+    const type = parts[2];
+    const qty = parts[3];
+
+    let idx = rows.findIndex(r => r.item.toLowerCase() === item);
+    if (idx === -1) {
+      rows.push({ ...emptyRow, item });
+      idx = rows.length - 1;
+    }
+
+    const copy = [...rows];
+
+    if (type === "opening") copy[idx].openQty = qty;
+    if (type === "in") copy[idx].inQty = qty;
+    if (type === "out") copy[idx].outQty = qty;
+
+    setRows(copy);
+    setCommand("");
   };
 
   return (
@@ -64,6 +81,20 @@ function App() {
       ) : (
         <>
           <h2>Guest House Stock Sheet</h2>
+
+          {/* AI INPUT */}
+          <div style={{ marginBottom: 15 }}>
+            <input
+              style={{ width: "60%" }}
+              placeholder="AI command: add sugar opening 5"
+              value={command}
+              onChange={(e) => setCommand(e.target.value)}
+            />
+            <button onClick={runAI} style={{ marginLeft: 10 }}>
+              🤖 Run
+            </button>
+          </div>
+
           <button onClick={addRow}>➕ Add Item</button>
 
           <table
@@ -87,17 +118,11 @@ function App() {
                 <th>❌</th>
               </tr>
               <tr style={{ background: "#f9f9f9" }}>
-                <th></th>
-                <th></th>
-                <th></th>
-                <th>Date</th>
-                <th>Qty</th>
-                <th>Date</th>
-                <th>Qty</th>
-                <th>Date</th>
-                <th>Qty</th>
-                <th>Date</th>
-                <th>Qty</th>
+                <th></th><th></th><th></th>
+                <th>Date</th><th>Qty</th>
+                <th>Date</th><th>Qty</th>
+                <th>Date</th><th>Qty</th>
+                <th>Date</th><th>Qty</th>
                 <th></th>
               </tr>
             </thead>
@@ -108,71 +133,38 @@ function App() {
                   <td>{i + 1}</td>
 
                   <td>
-                    <input
-                      value={r.item}
-                      onChange={(e) => update(i, "item", e.target.value)}
-                    />
+                    <input value={r.item}
+                      onChange={e => update(i, "item", e.target.value)} />
                   </td>
 
                   <td>
-                    <input
-                      value={r.unit}
-                      onChange={(e) => update(i, "unit", e.target.value)}
-                    />
+                    <input value={r.unit}
+                      onChange={e => update(i, "unit", e.target.value)} />
                   </td>
 
-                  <td>
-                    <input
-                      value={r.openDate}
-                      onChange={(e) => update(i, "openDate", e.target.value)}
-                    />
-                  </td>
-                  <td>
-                    <input
-                      value={r.openQty}
-                      onChange={(e) => update(i, "openQty", e.target.value)}
-                    />
-                  </td>
+                  <td><input value={r.openDate}
+                      onChange={e => update(i, "openDate", e.target.value)} /></td>
+                  <td><input value={r.openQty}
+                      onChange={e => update(i, "openQty", e.target.value)} /></td>
 
-                  <td>
-                    <input
-                      value={r.inDate}
-                      onChange={(e) => update(i, "inDate", e.target.value)}
-                    />
-                  </td>
-                  <td>
-                    <input
-                      value={r.inQty}
-                      onChange={(e) => update(i, "inQty", e.target.value)}
-                    />
-                  </td>
+                  <td><input value={r.inDate}
+                      onChange={e => update(i, "inDate", e.target.value)} /></td>
+                  <td><input value={r.inQty}
+                      onChange={e => update(i, "inQty", e.target.value)} /></td>
 
-                  <td>
-                    <input
-                      value={r.outDate}
-                      onChange={(e) => update(i, "outDate", e.target.value)}
-                    />
-                  </td>
-                  <td>
-                    <input
-                      value={r.outQty}
-                      onChange={(e) => update(i, "outQty", e.target.value)}
-                    />
-                  </td>
+                  <td><input value={r.outDate}
+                      onChange={e => update(i, "outDate", e.target.value)} /></td>
+                  <td><input value={r.outQty}
+                      onChange={e => update(i, "outQty", e.target.value)} /></td>
 
-                  <td>
-                    <input
-                      value={r.balDate}
-                      onChange={(e) => update(i, "balDate", e.target.value)}
-                    />
-                  </td>
-                  <td
-                    style={{
-                      background: "#ffeaa7",
-                      fontWeight: "bold",
-                      textAlign: "center"
-                    }}
-                  >
+                  <td><input value={r.balDate}
+                      onChange={e => update(i, "balDate", e.target.value)} /></td>
+
+                  <td style={{
+                    background: "#ffeaa7",
+                    fontWeight: "bold",
+                    textAlign: "center"
+                  }}>
                     {balanceQty(r)}
                   </td>
 
