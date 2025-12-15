@@ -210,6 +210,13 @@ const exportPDF = () => {
   return (
     <div style={{ padding: 20 }}>
       <h2>Guest House Stock Sheet</h2>
+      
+<div style={{ marginBottom: 15 }}>
+  <button onClick={exportExcel}>📤 Export Excel</button>
+  <button onClick={exportPDF} style={{ marginLeft: 10 }}>
+    📄 Export PDF
+  </button>
+</div>
 
       {/* AI BOT */}
       <div style={{ marginBottom: 15 }}>
