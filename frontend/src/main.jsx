@@ -46,7 +46,7 @@ function App() {
   });
 
   const [command, setCommand] = useState("");
-  const [page, setPage] = useState("home");
+  const [page, setPage] = useState("app");
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(rows));
