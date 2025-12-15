@@ -54,6 +54,28 @@ function parseCommand(text) {
 
 /* ---------- APP ---------- */
 function App() {
+  function App() {
+  const [showApp, setShowApp] = useState(false);
+
+  return (
+    <div>
+      {!showApp ? (
+        <div>
+          <h1>🏨 Guest House Stock Manager</h1>
+          <button onClick={() => setShowApp(true)}>
+            Open Stock Sheet
+          </button>
+        </div>
+      ) : (
+        <div>
+          <h2>Guest House Stock Sheet</h2>
+          {/* your existing buttons + table here */}
+        </div>
+      )}
+    </div>
+  );
+}
+
   const [rows, setRows] = useState([
     {
       item: "",
