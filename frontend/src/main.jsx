@@ -1,102 +1,130 @@
 import React, { useState } from "react";
 import ReactDOM from "react-dom/client";
 
-/* =======================
-   APP COMPONENT
-======================= */
 function App() {
   const [showApp, setShowApp] = useState(false);
 
-  // dummy placeholders (safe for build)
-  const exportExcel = () => alert("Excel export coming soon");
-  const exportPDF = () => alert("PDF export coming soon");
+  const [rows, setRows] = useState([
+    {
+      item: "",
+      unit: "",
+      d1_open: "",
+      d1_in: "",
+      d1_out: "",
+      d2_open: "",
+      d2_in: "",
+      d2_out: "",
+      d3_open: "",
+      d3_in: "",
+      d3_out: "",
+      d4_open: "",
+      d4_in: "",
+      d4_out: ""
+    }
+  ]);
+
+  const addRow = () => {
+    setRows([...rows, { ...rows[0], item: "", unit: "" }]);
+  };
+
+  const deleteRow = (i) => {
+    setRows(rows.filter((_, idx) => idx !== i));
+  };
+
+  const update = (i, key, val) => {
+    const copy = [...rows];
+    copy[i][key] = val;
+    setRows(copy);
+  };
+
+  const closing = (r) => {
+    const totalIn =
+      (+r.d1_in || 0) + (+r.d2_in || 0) + (+r.d3_in || 0) + (+r.d4_in || 0);
+    const totalOut =
+      (+r.d1_out || 0) + (+r.d2_out || 0) + (+r.d3_out || 0) + (+r.d4_out || 0);
+    const opening = +r.d1_open || 0;
+    return opening + totalIn - totalOut;
+  };
 
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        background: "#f4f6f8",
-        fontFamily: "Arial, sans-serif"
-      }}
-    >
-      {/* ===== OPENING PAGE ===== */}
-      {!showApp && (
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            justifyContent: "center",
-            alignItems: "center",
-            height: "100vh",
-            textAlign: "center"
-          }}
-        >
-          <h1 style={{ fontSize: 36 }}>🏨 Guest House Stock Manager</h1>
-          <p style={{ fontSize: 18, color: "#555", maxWidth: 500 }}>
-            Smart inventory management for your guest house.
-          </p>
-
-          <button
-            style={{
-              marginTop: 30,
-              padding: "12px 30px",
-              fontSize: 18,
-              borderRadius: 8,
-              border: "none",
-              background: "#1976d2",
-              color: "white",
-              cursor: "pointer"
-            }}
-            onClick={() => setShowApp(true)}
-          >
-            Open Stock Sheet
-          </button>
+    <div style={{ fontFamily: "Arial", padding: 20 }}>
+      {!showApp ? (
+        <div style={{ textAlign: "center", marginTop: 100 }}>
+          <h1>🏨 Guest House Stock Manager</h1>
+          <button onClick={() => setShowApp(true)}>Open App</button>
         </div>
-      )}
+      ) : (
+        <>
+          <h2>Guest House Stock Sheet</h2>
 
-      {/* ===== MAIN APP PAGE ===== */}
-      {showApp && (
-        <div style={{ padding: 20 }}>
-          <h2>🏨 Guest House Stock Sheet</h2>
+          <button onClick={addRow}>➕ Add Item</button>
 
-          {/* EXPORT BUTTONS */}
-          <div style={{ marginBottom: 15 }}>
-            <button onClick={exportExcel}>📤 Export Excel</button>
-            <button onClick={exportPDF} style={{ marginLeft: 10 }}>
-              📄 Export PDF
-            </button>
-          </div>
+          <table border="1" cellPadding="5" style={{ marginTop: 15 }}>
+            <thead>
+              <tr>
+                <th>S.No</th>
+                <th>Item</th>
+                <th>Unit</th>
 
-          {/* PLACEHOLDER TABLE */}
-          <div
-            style={{
-              background: "white",
-              padding: 20,
-              borderRadius: 8,
-              boxShadow: "0 0 5px rgba(0,0,0,0.1)"
-            }}
-          >
-            <p>
-              Production app scaffold ready.
-            </p>
-            <p>
-              Main spreadsheet, AI bot, and logic engines will run here.
-            </p>
-          </div>
-        </div>
+                <th colSpan="3">Date 1</th>
+                <th colSpan="3">Date 2</th>
+                <th colSpan="3">Date 3</th>
+                <th colSpan="3">Date 4</th>
+
+                <th>Closing</th>
+                <th>❌</th>
+              </tr>
+              <tr>
+                <th></th><th></th><th></th>
+                {Array(4).fill(0).map((_, i) => (
+                  <React.Fragment key={i}>
+                    <th>Open</th>
+                    <th>In</th>
+                    <th>Out</th>
+                  </React.Fragment>
+                ))}
+                <th></th><th></th>
+              </tr>
+            </thead>
+
+            <tbody>
+              {rows.map((r, i) => (
+                <tr key={i}>
+                  <td>{i + 1}</td>
+                  <td>
+                    <input value={r.item} onChange={e => update(i, "item", e.target.value)} />
+                  </td>
+                  <td>
+                    <input value={r.unit} onChange={e => update(i, "unit", e.target.value)} />
+                  </td>
+
+                  {["d1", "d2", "d3", "d4"].map(d => (
+                    <React.Fragment key={d}>
+                      <td><input onChange={e => update(i, `${d}_open`, e.target.value)} /></td>
+                      <td><input onChange={e => update(i, `${d}_in`, e.target.value)} /></td>
+                      <td><input onChange={e => update(i, `${d}_out`, e.target.value)} /></td>
+                    </React.Fragment>
+                  ))}
+
+                  <td style={{ background: "#ffeaa7", fontWeight: "bold" }}>
+                    {closing(r)}
+                  </td>
+
+                  <td>
+                    <button onClick={() => deleteRow(i)}>🗑</button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </>
       )}
     </div>
   );
 }
 
-/* =======================
-   RENDER APP
-======================= */
-ReactDOM.createRoot(document.getElementById("root")).render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>
-);
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+
 
 
 
