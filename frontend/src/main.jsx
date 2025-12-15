@@ -1,4 +1,7 @@
 import React from "react";
+import * as XLSX from "xlsx";
+import jsPDF from "jspdf";
+import "jspdf-autotable";
 import ReactDOM from "react-dom/client";
 import { useState, useEffect } from "react";
 
